@@ -1,12 +1,16 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"time"
+
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 const version = "1.0.0"
@@ -14,6 +18,9 @@ const version = "1.0.0"
 type config struct {
 	port int
 	env  string
+	db   struct {
+		dsn string
+	}
 }
 
 type AppStatus struct {
@@ -25,6 +32,7 @@ type AppStatus struct {
 type application struct {
 	config config
 	logger *log.Logger
+	db     *mongo.Client
 }
 
 func main() {
@@ -32,13 +40,19 @@ func main() {
 
 	flag.IntVar(&cfg.port, "port", 4000, "Server port to listen on")
 	flag.StringVar(&cfg.env, "env", "development", "Application environment (development|production)")
+	flag.StringVar(&cfg.db.dsn, "dsn", "mongodb://localhost:27017/go_movies", "Mongo connection string")
 	flag.Parse()
 
 	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
 
+	db, err := openDB(cfg)
+	if err != nil {
+		logger.Fatal(err)
+	}
 	app := &application{
 		config: cfg,
 		logger: logger,
+		db:     db,
 	}
 
 	srv := &http.Server{
@@ -54,4 +68,15 @@ func main() {
 	if err := srv.ListenAndServe(); err != nil {
 		logger.Println(err)
 	}
+}
+
+func openDB(cfg config) (*mongo.Client, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(cfg.db.dsn))
+	if err != nil {
+		return nil, err
+	}
+	defer client.Disconnect(ctx)
+	return client, nil
 }

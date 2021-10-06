@@ -1,7 +1,24 @@
 package models
 
-import "time"
+import (
+	"time"
 
+	"go.mongodb.org/mongo-driver/mongo"
+)
+
+// Models is the wrapper for database
+type Models struct {
+	DB DBModel
+}
+
+// NewModels returns models with db pool
+func NewModels(db *mongo.Client) Models {
+	return Models{
+		DB: DBModel{DB: db},
+	}
+}
+
+// Movie is the type for movie
 type Movie struct {
 	ID          int          `json:"id"`
 	Title       string       `json:"title"`
@@ -16,12 +33,15 @@ type Movie struct {
 	MovieGenre  []MovieGenre `json:"-"`
 }
 
+// Genre is the type of genre
 type Genre struct {
 	ID        int       `json:"id"`
 	GenreName string    `json:"genre_name"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
+
+// MovieGenre is the type of movie genre
 
 type MovieGenre struct {
 	ID        int       `json:"id"`

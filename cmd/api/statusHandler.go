@@ -7,7 +7,7 @@ import (
 
 func (app *application) statusHandler(w http.ResponseWriter, r *http.Request) {
 	s := AppStatus{
-		Status:      "Availble",
+		Status:      "Available",
 		Environment: app.config.env,
 		Version:     version,
 	}

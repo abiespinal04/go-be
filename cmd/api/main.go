@@ -31,7 +31,7 @@ type AppStatus struct {
 }
 
 type application struct {
-	config config
+	config
 	logger *log.Logger
 	models models.Models
 }
